@@ -13,6 +13,9 @@ class Button:
         self.function = function
         self.params = params
         self.highlighted = False
+        self.font = pygame.font.SysFont("arial", height // 3)
+        self.width = width
+        self.height = height
 
     def update(self, mouse):
         self.highlighted = self.rect.collidepoint(mouse)
@@ -20,3 +23,12 @@ class Button:
     def draw(self, window):
         self.image.fill(self.highlighted_color if self.highlighted else self.color)
         window.blit(self.image, self.pos)
+        self.draw_text(window)
+
+    def draw_text(self, window):
+        font = self.font.render(self.text, False, (50, 50, 50) if self.highlighted else (255, 255, 255))
+        pos = (
+            self.pos[0] + (self.width - self.font.size(self.text)[0]) // 2,
+            self.pos[1] + (self.height - self.font.size(self.text)[1]) // 2
+        )
+        window.blit(font, pos)

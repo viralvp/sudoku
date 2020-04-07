@@ -24,6 +24,12 @@ class App:
         self.load()
 
     """ Initializing Functions """
+    def load(self):
+        """ Load Game Resources """
+        self.set_title_and_icon()
+        self.load_buttons()
+        self.update_grid(test_board_1)
+
     @staticmethod
     def set_title_and_icon():
         """ Set The Title And The Icon Of The Main Window """
@@ -31,18 +37,11 @@ class App:
         icon = pygame.image.load("assets/icon.png")
         pygame.display.set_icon(icon)
 
-    def load(self):
-        """ Load Game Resources """
-        self.set_title_and_icon()
-        self.load_buttons()
-        self.update_grid(test_board_1)
-
     def load_buttons(self):
         """ Load All The Buttons """
-        self.playing_buttons.append(Button(20, 40, 100, 40, "Hello"))
+        self.playing_buttons.append(Button(20, 40, 100, 40, "New Game"))
 
     """ Main Game Functions """
-
     def run(self):
         """ Play Function """
         self.running = True
@@ -62,26 +61,13 @@ class App:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.set_selected(self.mouse_on_grid())
             if self.get_selected() is not None and event.type == pygame.KEYDOWN:
-                selected = self.get_selected()
-                if event.key == pygame.K_UP:
-                    self.find_next_unlocked(selected[0], selected[1], 0, -1)
-                if event.key == pygame.K_DOWN:
-                    self.find_next_unlocked(selected[0], selected[1], 0, 1)
-                if event.key == pygame.K_LEFT:
-                    self.find_next_unlocked(selected[0], selected[1], -1, 0)
-                if event.key == pygame.K_RIGHT:
-                    self.find_next_unlocked(selected[0], selected[1], 1, 0)
-                if event.unicode != '' and event.unicode in '123456789':
-                    self.grid[selected[0]][selected[1]] = int(event.unicode)
-                if event.key == pygame.K_BACKSPACE or event.key == pygame.K_DELETE:
-                    self.grid[selected[0]][selected[1]] = 0
+                self.event_seletect_moved(event)
+                self.event_cell_update(event)
 
     def update(self):
         """ This Will Call All The Update Functions """
         self.mousePos = pygame.mouse.get_pos()
         self.update_button_hover_status()
-        self.update_invalid()
-        self.update_status()
 
     def draw(self):
         """ This Will Call All The Draw Functions """
@@ -93,8 +79,31 @@ class App:
         self.draw_buttons()
         self.draw_numbers()
 
-    """ Draw Functions """
+    """ Event Functions """
+    def event_cell_update(self, event):
+        selected = self.get_selected()
+        updated = False
+        if event.unicode != '' and event.unicode in '123456789':
+            self.grid[selected[0]][selected[1]] = int(event.unicode)
+            updated = True
+        if event.key == pygame.K_BACKSPACE or event.key == pygame.K_DELETE:
+            self.grid[selected[0]][selected[1]] = 0
+            updated = True
+        if updated:
+            self.cell_updated()
 
+    def event_selected_moved(self, event):
+        selected = self.get_selected()
+        if event.key == pygame.K_UP:
+            self.find_next_unlocked(selected[0], selected[1], 0, -1)
+        if event.key == pygame.K_DOWN:
+            self.find_next_unlocked(selected[0], selected[1], 0, 1)
+        if event.key == pygame.K_LEFT:
+            self.find_next_unlocked(selected[0], selected[1], -1, 0)
+        if event.key == pygame.K_RIGHT:
+            self.find_next_unlocked(selected[0], selected[1], 1, 0)
+
+    """ Draw Functions """
     def draw_grid(self):
         """ It Draws The Main Grid """
         pygame.draw.rect(self.screen, BLACK,
@@ -148,6 +157,9 @@ class App:
             self.color_cell(i, INVALID)
 
     """ Update Functions """
+    def cell_updated(self):
+        self.update_invalid()
+        self.update_status()
 
     def update_invalid(self):
         """ Check For All The InValid Entries And Add Them To The InValid List """
@@ -161,9 +173,9 @@ class App:
         """ Check Weather The Game Is Solved Or Not """
         if len(self.invalid) != 0:
             return False
-        for i in range(9):
-            for j in range(9):
-                if self.grid[i][j] == 0:
+        for row in self.grid:
+            for num in row:
+                if num == 0:
                     return False
         self.solved = True
         print("solved")
@@ -175,7 +187,6 @@ class App:
             button.update(self.mousePos)
 
     """ Helper Functions """
-
     def find_next_unlocked(self, x: int, y: int, i: int, j: int):
         """ Find The Next Cell Which Is Unlocked From The Given Position """
         if i == -1:
@@ -245,7 +256,6 @@ class App:
         self.grid = [[j for j in i] for i in self.grid_check]
 
     """ Getters And Setters """
-
     def get_selected(self) -> Tuple[int, int]:
         return self._selected if self._selected != (-1, -1) else None
 
